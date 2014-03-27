@@ -1,0 +1,83 @@
+---
+type: suite
+start: 2011-10-10 12:12:32
+count: 2
+seed: 32154
+rev: 4
+
+---
+type: case
+subtype: feature
+label: Multiplication
+level: 0
+
+---
+type: test
+subtype: step
+status: pass
+setup: foo instance
+label: multiples of two
+expected: 2
+returned: 2
+file: test/test_foo.rb
+line: 45
+source: ok 1, 2
+snippet:
+    - 44: ok 0,0
+    - 45: ok 1,2
+    - 46: ok 2,4
+coverage:
+    file: lib/foo.rb
+    line: 11..13
+    code: Foo#*
+stdout: ''
+stderr: ''
+time: 0.01
+
+---
+type: test
+subtype: step
+status: fail
+label: multiples of two
+setup: foo instance
+expected: 2
+returned: 1
+file: test/test_foo.rb
+line: 45
+source: ok 1, 2
+snippet:
+    - 44: ok 0,0
+    - 45: ok 1,2
+    - 46: ok 2,4
+coverage:
+    file: lib/foo.rb
+    line: 11..13
+    code: Foo#*
+exception:
+    message: |
+        (assertion fail) must_equal
+        1
+        2
+    file: test/test_foo.rb
+    line: 50
+    source: 1.must_equal == v
+    snippet:
+        - 49: v = 2
+        - 50: 1.must_equal == v
+        - 51: ''
+    backtrace:
+        - test/test_foo.rb:50
+        - test/test_foo.rb:45
+time: 0.02
+
+---
+type : final
+time : 0.03
+counts:
+    total: 2
+    pass : 1
+    fail : 1
+    error: 0
+    omit : 0
+    todo : 0
+...
