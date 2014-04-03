@@ -10,5 +10,5 @@ if __name__ == '__main__':
     tests_dir = os.path.dirname(os.path.abspath(__file__))
     loader = unittest.TestLoader()
     tests = loader.discover(tests_dir, pattern='*test*.py')
-    runner = CatapultTestRunner()
+    runner = CatapultTestRunner(format='tap')
     runner.run(tests)

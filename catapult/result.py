@@ -1,6 +1,7 @@
 """ Provides the CatapultTestResult class """
 from unittest import result
 import time
+from catapult.formatters import TAPFormatter, TAPYFormatter, TAPJFormatter
 
 
 class CatapultTestResult(result.TestResult):
@@ -8,12 +9,19 @@ class CatapultTestResult(result.TestResult):
     A test result class that outputs TAP
     """
 
-    def __init__(self, stream, descriptions, verbosity):
-        super(CatapultTestResult, self).__init__(stream, descriptions, verbosity)
-        self.stream = stream
-        self.dots = verbosity == 1
-        self.descriptions = descriptions
+    def __init__(self, stream, format='tap'):
+        super(CatapultTestResult, self).__init__()
         self.start_time = None
+        self._last_case = None
+        self.total_tests = 0
+        format = format.lower()
+        if format == 'tap-j' or format == 'tapj':
+            formatter_class = TAPJFormatter
+        elif format == 'tap-y' or format == 'tapy':
+            formatter_class = TAPYFormatter
+        else:
+            formatter_class = TAPFormatter
+        self.formatter = formatter_class(stream)
 
     def get_description(self, test):
         """
@@ -26,18 +34,30 @@ class CatapultTestResult(result.TestResult):
         else:
             return str(test)
 
-    def startTestRun(self):
+    def startTestRun(self, total_tests=None):
         """ Called once before any tests are executed """
+        if total_tests is not None:
+            self.total_tests = total_tests
+        self.formatter.suite(self.total_tests)
 
     def stopTestRun(self):
         """ Called once after all tests are executed """
-
-    def before_tests(self, suite):
-        """ Called with the entire test suite before any tests are run """
-        self.stream.writeln("1..{}".format(suite.countTestCases()))
-        self.start_time = time.time()
+        num_fail = len(self.failures) + len(self.unexpectedSuccesses)
+        num_pass = self.testsRun - num_fail - len(self.errors)
+        counts = {
+            'total': self.testsRun,
+            'pass': num_pass,
+            'fail': num_fail,
+            'error': len(self.errors),
+            'omit': len(self.skipped),
+            'todo': 0,
+        }
+        self.formatter.final(counts)
 
     def startTest(self, test):
+        if test.__class__ != self._last_case:
+            self.formatter.case(test.__class__.__name__)
+            self._last_case = test.__class__
         super(CatapultTestResult, self).startTest(test)
 
     def stopTest(self, test):
@@ -45,39 +65,27 @@ class CatapultTestResult(result.TestResult):
 
     def addSuccess(self, test):
         super(CatapultTestResult, self).addSuccess(test)
-        self.stream.writeln("ok {} - {}".format(self.testsRun, self.get_description(test)))
+        self.formatter.test(self.testsRun, 'pass', self.get_description(test))
 
     def addError(self, test, err):
         super(CatapultTestResult, self).addError(test, err)
-        self.stream.writeln("not ok {} - {}".format(self.testsRun, self.get_description(test)))
+        self.formatter.test(self.testsRun, 'error', self.get_description(test))
 
     def addFailure(self, test, err):
         super(CatapultTestResult, self).addFailure(test, err)
-        self.stream.writeln("not ok {} - {}".format(self.testsRun, self.get_description(test)))
+        self.formatter.test(self.testsRun, 'fail', self.get_description(test))
 
     def addSkip(self, test, reason):
         super(CatapultTestResult, self).addSkip(test, reason)
-        self.stream.writeln("ok {} # skipped {}".format(self.testsRun, reason))
+        # just use reason as the label for now
+        self.formatter.test(self.testsRun, 'omit', reason)
 
     def addExpectedFailure(self, test, err):
         super(CatapultTestResult, self).addExpectedFailure(test, err)
-        self.stream.writeln("not ok {} - expected failure for: {}"
-                            .format(self.testsRun, self.get_description(test)))
+        # TODO: mark as an expected failure instead of just a pass
+        self.formatter.test(self.testsRun, 'pass', self.get_description(test))
 
     def addUnexpectedSuccess(self, test):
         super(CatapultTestResult, self).addUnexpectedSuccess(test)
-        self.stream.writeln("not ok {} - unexpected success for: {}"
-                            .format(self.testsRun, self.get_description(test)))
-
-    # def printErrors(self):
-        # if self.dots or self.showAll:
-        #     self.stream.writeln()
-        # self.printErrorList('ERROR', self.errors)
-        # self.printErrorList('FAIL', self.failures)
-
-    # def printErrorList(self, flavour, errors):
-        # for test, err in errors:
-        #     self.stream.writeln(self.separator1)
-        #     self.stream.writeln("%s: %s" % (flavour,self.get_description(test)))
-        #     self.stream.writeln(self.separator2)
-        #     self.stream.writeln("%s" % err)
+        # TODO: mark as unexpected success instead of just a fail
+        self.formatter.test(self.testsRun, 'fail', self.get_description(test))
