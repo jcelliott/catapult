@@ -1,6 +1,5 @@
 """ Provides the CatapultTestResult class """
 from unittest import result
-import time
 from catapult.formatters import TAPFormatter, TAPYFormatter, TAPJFormatter
 
 
@@ -43,7 +42,7 @@ class CatapultTestResult(result.TestResult):
     def stopTestRun(self):
         """ Called once after all tests are executed """
         num_fail = len(self.failures) + len(self.unexpectedSuccesses)
-        num_pass = self.testsRun - num_fail - len(self.errors)
+        num_pass = self.testsRun - num_fail - len(self.errors) - len(self.skipped)
         counts = {
             'total': self.testsRun,
             'pass': num_pass,
@@ -65,27 +64,27 @@ class CatapultTestResult(result.TestResult):
 
     def addSuccess(self, test):
         super(CatapultTestResult, self).addSuccess(test)
-        self.formatter.test(self.testsRun, 'pass', self.get_description(test))
+        self.formatter.success(self.testsRun, self.get_description(test))
 
     def addError(self, test, err):
         super(CatapultTestResult, self).addError(test, err)
-        self.formatter.test(self.testsRun, 'error', self.get_description(test))
+        self.formatter.error(self.testsRun, self.get_description(test))
 
     def addFailure(self, test, err):
         super(CatapultTestResult, self).addFailure(test, err)
-        self.formatter.test(self.testsRun, 'fail', self.get_description(test))
+        self.formatter.fail(self.testsRun, self.get_description(test))
 
     def addSkip(self, test, reason):
         super(CatapultTestResult, self).addSkip(test, reason)
         # just use reason as the label for now
-        self.formatter.test(self.testsRun, 'omit', reason)
+        self.formatter.skip(self.testsRun, reason)
 
     def addExpectedFailure(self, test, err):
         super(CatapultTestResult, self).addExpectedFailure(test, err)
         # TODO: mark as an expected failure instead of just a pass
-        self.formatter.test(self.testsRun, 'pass', self.get_description(test))
+        self.formatter.success(self.testsRun, self.get_description(test))
 
     def addUnexpectedSuccess(self, test):
         super(CatapultTestResult, self).addUnexpectedSuccess(test)
         # TODO: mark as unexpected success instead of just a fail
-        self.formatter.test(self.testsRun, 'fail', self.get_description(test))
+        self.formatter.fail(self.testsRun, self.get_description(test))
