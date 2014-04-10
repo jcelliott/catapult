@@ -29,4 +29,5 @@ class ExampleTest(TestCase):
     def test_example_2(self):
         """ Another example test """
         time.sleep(0.5)
+        raise Exception("this test will error")
         self.assertTrue(True)

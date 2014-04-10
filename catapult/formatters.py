@@ -1,6 +1,6 @@
 """ Provides formatters for TAP, TAP-Y, and TAP-J output"""
 # pylint: disable=W0613
-from datetime import datetime
+import arrow
 import json
 import yaml
 
@@ -12,11 +12,11 @@ class BaseTAPFormatter(object):
 
     def __init__(self, stream):
         self.stream = stream
-        self.start_time = datetime.now()
+        self.start_time = arrow.utcnow()
 
     def elapsed_time(self):
         """ Return the number of seconds since the test started """
-        return (datetime.now() - self.start_time).total_seconds()
+        return (arrow.utcnow() - self.start_time).total_seconds()
 
 
 class TAPFormatter(BaseTAPFormatter):
@@ -27,7 +27,7 @@ class TAPFormatter(BaseTAPFormatter):
 
     def suite(self, count, seed=None):
         """ format a suite record """
-        self.stream.writeln("1..{}".format(count))
+        # self.stream.writeln("1..{}".format(count))
 
     def case(self, label, subtype=None, level=0):
         """ format a case record """
@@ -75,7 +75,7 @@ class SerializingTAPFormatter(BaseTAPFormatter):
         """ format a suite record """
         suite = {
             'type': 'suite',
-            'start': self.start_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'start': self.start_time,
             'count': count,
             'rev': TAPYJ_REV,
         }
@@ -147,6 +147,13 @@ class SerializingTAPFormatter(BaseTAPFormatter):
         self.stream.writeln(self.serialize(final, final=True))
 
 
+def json_encode_time(obj):
+    """ json encode time """
+    if hasattr(obj, 'isoformat'):
+        return obj.isoformat()
+    raise TypeError(repr(obj) + " is not JSON serializable")
+
+
 class TAPJFormatter(SerializingTAPFormatter):
     """ Format test results in the TAP-J format """
 
@@ -154,9 +161,15 @@ class TAPJFormatter(SerializingTAPFormatter):
         super(TAPJFormatter, self).__init__(stream)
 
     def serialize(self, data, final=False):
-        return json.dumps(data)
+        return json.dumps(data, default=json_encode_time)
         # more compact
         # return json.dumps(data, separators=(',',':'))
+
+
+def yaml_encode_time(dumper, data):
+    """ yaml encode time """
+    # override default timestamp tag to produce an RFC3339 compliant representation
+    return dumper.represent_scalar('tag:yaml.org,2002:timestamp', str(data))
 
 
 class TAPYFormatter(SerializingTAPFormatter):
@@ -167,6 +180,7 @@ class TAPYFormatter(SerializingTAPFormatter):
 
     def serialize(self, data, final=False):
         explicit_end = final
+        yaml.SafeDumper.add_representer(arrow.Arrow, yaml_encode_time)
         return yaml.safe_dump(data,
                               default_flow_style=False,
                               explicit_start=True,

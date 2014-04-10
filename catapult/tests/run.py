@@ -11,4 +11,6 @@ if __name__ == '__main__':
     loader = unittest.TestLoader()
     tests = loader.discover(tests_dir, pattern='*test*.py')
     runner = CatapultTestRunner(format='tap-j')
+    # runner = CatapultTestRunner(format='tap-y')
+    # runner = CatapultTestRunner(format='tap')
     runner.run(tests)
