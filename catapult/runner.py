@@ -3,7 +3,6 @@
 import sys
 
 from catapult.result import CatapultTestResult
-from catapult.formatters import TAPFormatter
 
 
 class CatapultTestRunner(object):
@@ -11,10 +10,9 @@ class CatapultTestRunner(object):
     A test runner class that will output results in TAP format
     """
 
-    def __init__(self, stream=sys.stdout, buffer=False, format='tap'):
+    def __init__(self, stream=sys.stdout, fmt='tap'):
         self.stream = _WritelnDecorator(stream)
-        self.result = CatapultTestResult(self.stream, format=format)
-        self.result.buffer = buffer
+        self.result = CatapultTestResult(self.stream, fmt=fmt)
 
     def run(self, test):
         """ Run the given test case or test suite """
@@ -38,6 +36,7 @@ class _WritelnDecorator(object):
         return getattr(self.stream, attr)
 
     def writeln(self, arg=None):
+        """ write and flush a line of text """
         if arg:
             self.write(arg)
         self.write('\n')  # text-mode streams translate to \r\n if needed

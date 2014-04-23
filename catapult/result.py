@@ -8,15 +8,15 @@ class CatapultTestResult(result.TestResult):
     A test result class that outputs TAP
     """
 
-    def __init__(self, stream, format='tap'):
+    def __init__(self, stream, fmt='tap'):
         super(CatapultTestResult, self).__init__()
         self.start_time = None
         self._last_case = None
         self.total_tests = 0
-        format = format.lower()
-        if format == 'tap-j' or format == 'tapj':
+        fmt = fmt.lower()
+        if fmt == 'tap-j' or fmt == 'tapj':
             formatter_class = TAPJFormatter
-        elif format == 'tap-y' or format == 'tapy':
+        elif fmt == 'tap-y' or fmt == 'tapy':
             formatter_class = TAPYFormatter
         else:
             formatter_class = TAPFormatter
@@ -33,7 +33,7 @@ class CatapultTestResult(result.TestResult):
         else:
             return str(test)
 
-    def startTestRun(self, total_tests=None):
+    def startTestRun(self, total_tests=None):  # pylint: disable=W0221
         """ Called once before any tests are executed """
         if total_tests is not None:
             self.total_tests = total_tests
@@ -64,15 +64,21 @@ class CatapultTestResult(result.TestResult):
 
     def addSuccess(self, test):
         super(CatapultTestResult, self).addSuccess(test)
-        self.formatter.success(self.testsRun, self.get_description(test))
+        self.formatter.success(self.testsRun,
+                               self.get_description(test),
+                               self._get_success_info(test))
 
     def addError(self, test, err):
         super(CatapultTestResult, self).addError(test, err)
-        self.formatter.error(self.testsRun, self.get_description(test))
+        self.formatter.error(self.testsRun,
+                             self.get_description(test),
+                             self._get_fail_info(test))
 
     def addFailure(self, test, err):
         super(CatapultTestResult, self).addFailure(test, err)
-        self.formatter.fail(self.testsRun, self.get_description(test))
+        self.formatter.fail(self.testsRun,
+                            self.get_description(test),
+                            self._get_fail_info(test))
 
     def addSkip(self, test, reason):
         super(CatapultTestResult, self).addSkip(test, reason)
@@ -82,9 +88,31 @@ class CatapultTestResult(result.TestResult):
     def addExpectedFailure(self, test, err):
         super(CatapultTestResult, self).addExpectedFailure(test, err)
         # TODO: mark as an expected failure instead of just a pass
-        self.formatter.success(self.testsRun, self.get_description(test))
+        self.formatter.success(self.testsRun,
+                               self.get_description(test),
+                               self._get_success_info(test))
 
     def addUnexpectedSuccess(self, test):
         super(CatapultTestResult, self).addUnexpectedSuccess(test)
         # TODO: mark as unexpected success instead of just a fail
-        self.formatter.fail(self.testsRun, self.get_description(test))
+        self.formatter.fail(self.testsRun,
+                            self.get_description(test),
+                            self._get_fail_info(test))
+
+    def _get_success_info(self, test):
+        """ generate the info object for a successful test for the formatter class """
+        res = self._get_test_result(test)
+        if res is not None:
+            return {'extra': {'result': res}}
+        return None
+
+    def _get_fail_info(self, test):
+        """ generate the info object for a failed test for the formatter class """
+        # TODO: eventually this needs to be handled differently
+        return self._get_success_info(test)
+
+    def _get_test_result(self, test):
+        """ try to get the result object from the test """
+        if 'result' in test.__dict__:
+            return test.result
+        return None
