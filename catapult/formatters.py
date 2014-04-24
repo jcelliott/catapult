@@ -35,15 +35,15 @@ class TAPFormatter(BaseTAPFormatter):
 
     def success(self, test_num, label, info=None):
         """ format a test record with status 'pass' """
-        self.stream.writeln("ok {} - {}".format(test_num, label))
+        self.stream.writeln("ok {} {}".format(test_num, label))
 
     def fail(self, test_num, label, info=None):
         """ format a test record with status 'fail' """
-        self.stream.writeln("not ok {} - {}".format(test_num, label))
+        self.stream.writeln("not ok {} {}".format(test_num, label))
 
     def error(self, test_num, label, info=None):
         """ format a test record with status 'error' """
-        self.stream.writeln("not ok {} - {}".format(test_num, label))
+        self.stream.writeln("not ok {} {}".format(test_num, label))
 
     def skip(self, test_num, label, info=None):
         """ format a test record with status 'omit' """
@@ -55,6 +55,7 @@ class TAPFormatter(BaseTAPFormatter):
 
     def note(self, text):
         """ format a note record """
+        self.stream.writeln("# {}".format(text))
 
     def final(self, counts, tally=False):
         """ format a final or tally record """

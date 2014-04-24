@@ -6,9 +6,11 @@ class ExampleTest(TestCase):
 
     def test_something(self):
         """ A test to check something """
+        time.sleep(0.5)
         self.assertEqual("something", "something")
 
     def test_something_else(self):
+        time.sleep(0.5)
         self.assertEqual("something", "else")
 
     def test_number_one(self):

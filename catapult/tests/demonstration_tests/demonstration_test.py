@@ -8,6 +8,7 @@ class DemonstrationTest(TestCase):
 
     def test_a_piece_of_code(self):
         """ Test that the code checks out """
+        time.sleep(0.5)
         self.assertEqual("piece of code", "piece of code")
 
     def test_another_piece_of_code(self):
@@ -18,4 +19,10 @@ class DemonstrationTest(TestCase):
 
     def test_a_number(self):
         """ Test all the numbers """
+        time.sleep(0.5)
         self.assertTrue(3 == 2)
+
+    def test_bad_foobar(self):
+        """ Test that a bad foobar will fail validation """
+        time.sleep(0.5)
+        self.assertFalse(False)
