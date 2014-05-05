@@ -1,9 +1,11 @@
 """ The plugin module provides a nose test plugin for catapult """
 import os
+import sys
+from StringIO import StringIO
 
 from nose.plugins import Plugin
 
-from catapult.runner import CatapultTestRunner
+from catapult.result import CatapultTestResult
 
 
 class CatapultPlugin(Plugin):
@@ -12,6 +14,16 @@ class CatapultPlugin(Plugin):
     """
     name = 'catapult'
     score = 2000
+
+    def __init__(self, *args, **kwargs):
+        super(CatapultPlugin, self).__init__(*args, **kwargs)
+        self.result = None
+        self.test_suite = None
+        self.stream = sys.stdout
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
 
     def options(self, parser, env=os.environ):  # pylint: disable=W0102
         super(CatapultPlugin, self).options(parser, env=env)
@@ -48,13 +60,37 @@ class CatapultPlugin(Plugin):
         # TODO: how to handle logs?
         options.logcapture = True
 
-    def prepareTestRunner(self, runner):  # pylint: disable=C0103
-        """ Replace the test runner with catapult's runner """
-        return CatapultTestRunner(stream=runner.stream,
-                                  fmt=self.conf.options.catapult_format)
+    def prepareTest(self, test):
+        """ Called with the entire test suite before starting the test """
+        # cache the test suite so `prepareTestResult` can use it later
+        self.test_suite = test
 
-    def prepareTestResult(self, result):  # pylint: disable=C0103
+    def finalize(self, _):
+        """ Print final test results (TAP-Y/J 'final' record) """
+        self.result.stopTestRun()
+
+    def setOutputStream(self, stream):
+        """ Capture the output stream so only catapult can use it """
+        self.stream = stream
+        # self.runner.stream = stream
+        class FakeStream:
+            def write(self, *arg):
+                pass
+            def writeln(self, *arg):
+                pass
+        fake_stream = FakeStream()
+        return fake_stream
+
+    def prepareTestResult(self, result):
         """ Configure catapult's test result class """
-        result.nose = True
-        result.include_stdout = self.conf.options.catapult_stdout
-        result.include_stderr = self.conf.options.catapult_stderr
+        # pass in the captured stream
+        self.result = CatapultTestResult(self.stream,
+                                         nose=True,
+                                         fmt=self.conf.options.catapult_format)
+        # result.include_stdout = self.conf.options.catapult_stdout
+        # result.include_stderr = self.conf.options.catapult_stderr
+
+        # start the TAP output (see CatapultTestRunner)
+        self.result.total_tests = self.test_suite.countTestCases()
+        self.result.startTestRun()
+        return self.result

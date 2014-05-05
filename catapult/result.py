@@ -1,5 +1,7 @@
 """ Provides the CatapultTestResult class """
 from unittest import result
+# import traceback
+
 from catapult.formatters import TAPFormatter, TAPYFormatter, TAPJFormatter
 
 
@@ -31,6 +33,7 @@ class CatapultTestResult(result.TestResult):
 
     def __init__(self, stream, fmt='tap', nose=False, include_stdout=True, include_stderr=False):
         super(CatapultTestResult, self).__init__()
+        self.stream = _WritelnDecorator(stream)
         self.start_time = None
         self._last_case = None
         self.total_tests = 0
@@ -41,7 +44,7 @@ class CatapultTestResult(result.TestResult):
             formatter_class = TAPYFormatter
         else:
             formatter_class = TAPFormatter
-        self.formatter = formatter_class(_WritelnDecorator(stream))
+        self.formatter = formatter_class(self.stream)
         self.buffer = True
         self.nose = nose
         self.include_stdout = include_stdout
@@ -85,21 +88,27 @@ class CatapultTestResult(result.TestResult):
                                self._get_success_info(test))
 
     def addError(self, test, err):
+        # self.stream.writeln("@addError")
+        # self.stream.writeln("test: {}".format(test))
+        # self.stream.writeln("err: {}".format(err))
+        # traceback.print_exception(err[0], err[1], err[2], file=self.stream)
         super(CatapultTestResult, self).addError(test, err)
         self.formatter.error(self.testsRun,
                              self._get_description(test),
-                             self._get_fail_info(test))
+                             self._get_fail_info(test, err))
 
     def addFailure(self, test, err):
         super(CatapultTestResult, self).addFailure(test, err)
         self.formatter.fail(self.testsRun,
                             self._get_description(test),
-                            self._get_fail_info(test))
+                            self._get_fail_info(test, err))
 
     def addSkip(self, test, reason):
+        # self.stream.writeln("reason type: {}".format(type(reason)))
+        # self.stream.writeln("reason: {}".format(reason))
         super(CatapultTestResult, self).addSkip(test, reason)
-        # just use reason as the label for now
-        self.formatter.skip(self.testsRun, reason)
+        self.formatter.skip(self.testsRun,
+                            self._get_description(test))
 
     def addExpectedFailure(self, test, err):
         super(CatapultTestResult, self).addExpectedFailure(test, err)
@@ -113,7 +122,7 @@ class CatapultTestResult(result.TestResult):
         # TODO: mark as unexpected success instead of just a fail
         self.formatter.fail(self.testsRun,
                             self._get_description(test),
-                            self._get_fail_info(test))
+                            self._get_fail_info(test, None))
 
     def _get_success_info(self, test):
         """ generate the info object for a successful test for the formatter class """
@@ -124,7 +133,7 @@ class CatapultTestResult(result.TestResult):
         # TODO: add stdout, stderr
         return info
 
-    def _get_fail_info(self, test):
+    def _get_fail_info(self, test, err):
         """ generate the info object for a failed test for the formatter class """
         # TODO: eventually this needs to be handled differently
         return self._get_success_info(test)

@@ -27,7 +27,7 @@ class TAPFormatter(BaseTAPFormatter):
 
     def suite(self, count, seed=None):
         """ format a suite record """
-        # self.stream.writeln("1..{}".format(count))
+        self.stream.writeln("1..{}".format(count))
 
     def case(self, label, subtype=None, level=0):
         """ format a case record """
@@ -156,6 +156,7 @@ def json_encode_time(obj):
     """ json encode time """
     if hasattr(obj, 'isoformat'):
         return obj.isoformat()
+    # return str(obj)
     raise TypeError(repr(obj) + " is not JSON serializable")
 
 
