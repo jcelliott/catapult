@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, expectedFailure
 import time
 
 
@@ -22,7 +22,14 @@ class DemonstrationTest(TestCase):
         time.sleep(0.5)
         self.assertTrue(3 == 2)
 
+    @expectedFailure
     def test_bad_foobar(self):
         """ Test that a bad foobar will fail validation """
         time.sleep(0.5)
-        self.assertFalse(False)
+        self.assertTrue(False)
+
+    @expectedFailure
+    def test_bad_widget(self):
+        """ Test that QA will catch bad widgets """
+        time.sleep(0.5)
+        self.assertEqual(42, 42, "failed to catch a bad widget")

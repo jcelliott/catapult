@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name='catapult',
-    version='0.2.1',
+    version='0.2.2',
     description='TAP, TAP-J, and TAP-Y output for unittest suites',
     long_description=read_md('README.md'),
     author='Joshua C Elliott',

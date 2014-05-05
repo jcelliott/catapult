@@ -106,9 +106,8 @@ class SerializingTAPFormatter(BaseTAPFormatter):
             'label': label,
         }
         if info is not None:
-            if 'extra' in info:
-                test['extra'] = info['extra']
-            # handle other stuff in info
+            for key, value in info.iteritems():
+                test[key] = value
         return test
 
     def success(self, test_num, label, info=None):

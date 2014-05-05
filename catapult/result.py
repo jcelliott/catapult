@@ -1,5 +1,6 @@
 """ Provides the CatapultTestResult class """
 from unittest import result
+from unittest.case import _UnexpectedSuccess
 # import traceback
 
 from catapult.formatters import TAPFormatter, TAPYFormatter, TAPJFormatter
@@ -98,51 +99,62 @@ class CatapultTestResult(result.TestResult):
                              self._get_fail_info(test, err))
 
     def addFailure(self, test, err):
+        # nose calls addFailure instead of addUnexpectedSuccess
+        if isinstance(err[1], _UnexpectedSuccess):
+            return self.addUnexpectedSuccess(test)
         super(CatapultTestResult, self).addFailure(test, err)
         self.formatter.fail(self.testsRun,
                             self._get_description(test),
                             self._get_fail_info(test, err))
 
     def addSkip(self, test, reason):
-        # self.stream.writeln("reason type: {}".format(type(reason)))
-        # self.stream.writeln("reason: {}".format(reason))
         super(CatapultTestResult, self).addSkip(test, reason)
         self.formatter.skip(self.testsRun,
-                            self._get_description(test))
+                            self._get_description(test),
+                            self._get_fail_info(test, reason))
 
     def addExpectedFailure(self, test, err):
         super(CatapultTestResult, self).addExpectedFailure(test, err)
-        # TODO: mark as an expected failure instead of just a pass
         self.formatter.success(self.testsRun,
                                self._get_description(test),
                                self._get_success_info(test))
 
     def addUnexpectedSuccess(self, test):
         super(CatapultTestResult, self).addUnexpectedSuccess(test)
-        # TODO: mark as unexpected success instead of just a fail
         self.formatter.fail(self.testsRun,
                             self._get_description(test),
-                            self._get_fail_info(test, None))
+                            self._get_fail_info(test, "Unexpected success"))
 
     def _get_success_info(self, test):
-        """ generate the info object for a successful test for the formatter class """
+        """ generate the info object for a successful test """
         info = {}
-        res = self._get_test_result(test)
-        if res is not None:
-            info['extra'] = {'result': res}
+        self._add_test_result(info, test)
         # TODO: add stdout, stderr
         return info
 
     def _get_fail_info(self, test, err):
-        """ generate the info object for a failed test for the formatter class """
-        # TODO: eventually this needs to be handled differently
-        return self._get_success_info(test)
+        """ generate the info object for a failed test """
+        info = {}
+        self._add_test_result(info, test)
+        info['exception'] = self._get_exception(err)
+        return info
 
-    def _get_test_result(self, test):
+    def _get_exception(self, err):
+        """ generate the TAP-Y/J 'exception' object from an error """
+        if isinstance(err, tuple):
+            exception = {'message': str(err[1])}
+        else:
+            exception = {'message': str(err)}
+        # TODO: add traceback info
+        return exception
+
+    def _add_test_result(self, info, test):
         """ try to get the result object from the test """
+        if self.nose:
+            # nose wraps the test case in its own test object
+            test = test.test
         if 'result' in test.__dict__:
-            return test.result
-        return None
+            info['extra'] = {'result': test.result}
 
     def _get_description(self, test):
         """
