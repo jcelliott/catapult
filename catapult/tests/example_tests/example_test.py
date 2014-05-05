@@ -14,6 +14,7 @@ class ExampleTest(TestCase):
 
     def test_something_else(self):
         time.sleep(0.5)
+        print("This is some text that shouldn't interfere with the TAP output")
         self.assertEqual("something", "else")
 
     def test_number_one(self):
@@ -30,11 +31,12 @@ class ExampleTest(TestCase):
     def test_example_1(self):
         """ An example test """
         time.sleep(0.5)
-        print("This is some text that shouldn't interfere with the TAP output")
+        print("This is some more text that shouldn't interfere with the TAP output")
         self.assertTrue(True)
 
     def test_example_2(self):
         """ Another example test """
         time.sleep(0.5)
+        log.error("This is another log message that shouldn't interfere with the TAP output")
         raise Exception("this test will error")
         self.assertTrue(True)

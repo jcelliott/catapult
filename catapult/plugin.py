@@ -58,7 +58,7 @@ class CatapultPlugin(Plugin):
             return
         options.capture = False
         # TODO: how to handle logs?
-        options.logcapture = True
+        options.logcapture = False
 
     def prepareTest(self, test):
         """ Called with the entire test suite before starting the test """
