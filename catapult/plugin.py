@@ -71,7 +71,9 @@ class CatapultPlugin(Plugin):
 
     def setOutputStream(self, stream):
         """ Capture the output stream so only catapult can use it """
-        self.stream = stream
+        # We're always using stdout for now, so we don't need to set this
+        # In addition, nose seems to give us stderr as the default stream
+        # self.stream = stream
         # self.runner.stream = stream
         class FakeStream:
             def write(self, *arg):
