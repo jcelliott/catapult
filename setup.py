@@ -8,9 +8,12 @@ except ImportError:
     print("warning: pypandoc module not found, could not convert Markdown to RST")
     read_md = lambda f: open(f, 'r').read()
 
+# read version from package
+exec(open('catapult/_version.py').read())
+
 setup(
     name='catapult',
-    version='0.2.3',
+    version=__version__,
     description='TAP, TAP-J, and TAP-Y output for unittest suites',
     long_description=read_md('README.md'),
     author='Joshua C Elliott',
