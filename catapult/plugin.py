@@ -22,8 +22,6 @@ class CatapultPlugin(Plugin):
         self.stream = sys.stdout
         self.stdout = sys.stdout
         self.stderr = sys.stderr
-        sys.stdout = StringIO()
-        sys.stderr = StringIO()
 
     def options(self, parser, env=os.environ):  # pylint: disable=W0102
         super(CatapultPlugin, self).options(parser, env=env)
@@ -59,6 +57,8 @@ class CatapultPlugin(Plugin):
         options.capture = False
         # TODO: how to handle logs?
         options.logcapture = False
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
 
     def prepareTest(self, test):
         """ Called with the entire test suite before starting the test """
