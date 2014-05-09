@@ -97,7 +97,7 @@ class SerializingTAPFormatter(BaseTAPFormatter):
             case['subtype'] = subtype
         self.stream.writeln(self.serialize(case))
 
-    def test(self, status, label, info):
+    def _test(self, status, label, info):
         """ format a test record """
         test = {
             'type': 'test',
@@ -106,33 +106,32 @@ class SerializingTAPFormatter(BaseTAPFormatter):
             'label': label,
         }
         if info is not None:
-            for key, value in info.iteritems():
-                test[key] = value
+            test.update(info)
         return test
 
     def success(self, test_num, label, info=None):
         """ format a test record with status 'pass' """
-        test = self.test('pass', label, info)
+        test = self._test('pass', label, info)
         self.stream.writeln(self.serialize(test))
 
     def fail(self, test_num, label, info=None):
         """ format a test record with status 'fail' """
-        test = self.test('fail', label, info)
+        test = self._test('fail', label, info)
         self.stream.writeln(self.serialize(test))
 
     def error(self, test_num, label, info=None):
         """ format a test record with status 'error' """
-        test = self.test('error', label, info)
+        test = self._test('error', label, info)
         self.stream.writeln(self.serialize(test))
 
     def skip(self, test_num, label, info=None):
         """ format a test record with status 'omit' """
-        test = self.test('omit', label, info)
+        test = self._test('omit', label, info)
         self.stream.writeln(self.serialize(test))
 
     def todo(self, test_num, label, info=None):
         """ format a test record with status 'todo' """
-        test = self.test('todo', label, info)
+        test = self._test('todo', label, info)
         self.stream.writeln(self.serialize(test))
 
     def note(self, text):
