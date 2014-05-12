@@ -22,6 +22,10 @@ class DemonstrationTest(TestCase):
         time.sleep(0.5)
         self.assertTrue(3 == 2)
 
+    def test_unexpected_exception(self):
+        """ Test that unexpected user-thrown exceptions are reported correctly """
+        raise StandardError("Unexpected user-thrown exception")
+
     @expectedFailure
     def test_bad_foobar(self):
         """ Test that a bad foobar will fail validation """

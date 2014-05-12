@@ -1,7 +1,8 @@
 """ Provides the CatapultTestResult class """
 from unittest import result
 from unittest.case import _UnexpectedSuccess
-# import traceback
+import traceback
+import os
 
 from catapult.formatters import TAPFormatter, TAPYFormatter, TAPJFormatter
 
@@ -142,10 +143,23 @@ class CatapultTestResult(result.TestResult):
     def _get_exception(self, err):
         """ generate the TAP-Y/J 'exception' object from an error """
         if isinstance(err, tuple):
-            exception = {'message': str(err[1])}
+            tb = traceback.extract_tb(err[2])
+
+            # format backtrace as <file_name>:<line>
+            bt = ["{}:{}".format(file_name, line) for (file_name, line, _, _) in tb]
+
+            # the first element is the unittest case, the second is the first part of user code
+            file_name, line, func_name, code = tb[1]
+            exception = {
+                'message': str(err[1]),
+                'file': os.path.relpath(file_name),
+                'line': line,
+                'function': func_name,
+                'source': code,
+                'backtrace': bt,
+            }
         else:
             exception = {'message': str(err)}
-        # TODO: add traceback info
         return exception
 
     def _add_test_result(self, info, test):
